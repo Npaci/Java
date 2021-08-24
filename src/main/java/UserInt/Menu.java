@@ -1,9 +1,9 @@
 package UserInt;
 
-import Entities.Marque;
-import Entities.Modele;
-import Entities.Option;
-import Entities.Voiture;
+import Classes.Marque;
+import Classes.Modele;
+import Classes.Option;
+import Classes.Voiture;
 
 import java.util.ArrayList;
 import java.util.InputMismatchException;
@@ -26,8 +26,8 @@ public class Menu {
     public Modele[] mesModeles = new Modele[]{new Modele(1, "Fiesta", mesMarques[0]),
             new Modele(2, "Serie 1", mesMarques[1]),
             new Modele(3, "Polo", mesMarques[2]),
-            new Modele(1, "A1", mesMarques[3]),
-            new Modele(1, "class A", mesMarques[4])};
+            new Modele(4, "A1", mesMarques[3]),
+            new Modele(5, "class A", mesMarques[4])};
 
     public Option[] mesOptions = new Option[]{new Option(1, "ABS", 2000.),
             new Option(2, "Bluetooth", 200.),

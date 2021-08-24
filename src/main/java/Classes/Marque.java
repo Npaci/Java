@@ -1,6 +1,4 @@
-package Entities;
-
-import java.util.Objects;
+package Classes;
 
 public class Marque {
     private int id_marque;
