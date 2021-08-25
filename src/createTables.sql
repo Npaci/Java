@@ -49,12 +49,20 @@ CREATE TABLE technobel.voiture (
 --DEFAULT CHARSET=utf8mb4
 --COLLATE=utf8mb4_0900_ai_ci;
 
+--CREATE TABLE technobel.voiture_option (
+--	voiture_id BIGINT not null,
+--	option_id BIGINT not null,
+--	constraint voiture_option_fk1 foreign key (voiture_id) references technobel.voiture(id_voiture),
+--	constraint voiture_option_fk2 foreign key (option_id) references technobel.option(id_option),
+--	CONSTRAINT voiture_pk PRIMARY KEY (voiture_id, option_id)
+--)
 CREATE TABLE technobel.voiture_option (
+	id_voiture_option BIGINT auto_increment not null,
 	voiture_id BIGINT not null,
 	option_id BIGINT not null,
 	constraint voiture_option_fk1 foreign key (voiture_id) references technobel.voiture(id_voiture),
 	constraint voiture_option_fk2 foreign key (option_id) references technobel.option(id_option),
-	CONSTRAINT voiture_pk PRIMARY KEY (voiture_id, option_id)
+	CONSTRAINT voiture_pk PRIMARY KEY (id_voiture_option)
 )
 --***** pour DBEAVER
 --ENGINE=InnoDB

@@ -15,6 +15,26 @@ import java.util.List;
 
 public class ModeleDAOImpl implements ModeleDAO {
 
+//    public Modele convertToObject(ResultSet res, ResultSet resMa) throws SQLException {
+//        System.out.println("Dans Modele Convert");
+//        int id = res.getInt("id_modele");
+//        String nom = res.getString("nom");
+//        int marque_id = res.getInt("marque_id");
+//
+//        //Retrouver la marque referencé dans le modèle
+//        Marque marque = null;
+//        boolean marqueFound = false;
+//        while (resMa.next() && !marqueFound) {
+//            if (resMa.getInt("id_marque") == marque_id){
+//                marqueFound = true;
+//                marque = new MarqueDAOImpl().convertToObject(resMa);
+//            }
+//        }
+//
+//        Modele modele = new Modele(id, nom, marque);
+//        return modele;
+//
+//    }
     private Modele convertToObject(ResultSet res) throws SQLException {
 
         int id = res.getInt("id_modele");
@@ -25,6 +45,66 @@ public class ModeleDAOImpl implements ModeleDAO {
         return modele;
 
     }
+
+//    @Override
+//    public Modele getById(Integer idModele) {
+//
+//        try (// Conn, Stmnt et Resultset sont des ATUCLOSABLE, en mettant entre parenthese(try with ressources), les ressources seront automatiquement fermées
+//             Connection connection = MySqlConnectionFactory.getConnection();
+//             PreparedStatement prepareStatement = connection.prepareStatement("SELECT * FROM modele WHERE id_modele = ?");
+//             PreparedStatement marquePrepStat = connection.prepareStatement("SELECT * FROM marque");
+//        ){
+//            prepareStatement.setInt(1, idModele);
+//
+//            try(ResultSet rs = prepareStatement.executeQuery();
+//                ResultSet rsMa = marquePrepStat.executeQuery()){
+//                if (rs.next())
+//                    return convertToObject(rs, rsMa);
+//                else
+//                    return null;
+//            }
+//
+//        } catch (SQLException ex) {
+//            System.out.println("Erreur lors du ModeleDAO getById()");
+//            ex.printStackTrace();
+//        }
+//
+//        return null;
+//
+//    }
+//
+//    @Override
+//    public List<Modele> getAll() {
+//
+//        try (// Conn, Stmnt et Resultset sont des ATUCLOSABLE, en mettant entre parenthese(try with ressources), les ressources seront automatiquement fermées
+//             Connection connection = MySqlConnectionFactory.getConnection();
+//             PreparedStatement prepareStatement = connection.prepareStatement("SELECT * FROM modele");
+//             PreparedStatement marquePrepStat = connection.prepareStatement("SELECT * FROM marque");
+//        ){
+//
+//            List<Modele> listRes = new ArrayList<>();
+//
+//            try(ResultSet rs = prepareStatement.executeQuery();
+//                ResultSet rsMa = marquePrepStat.executeQuery()){
+//                while (rs.next())
+//                    listRes.add(convertToObject(rs, rsMa));
+//
+//                if (listRes.size() == 0)
+//                    return null;
+//                else
+//                    return listRes;
+//            }
+//
+//
+//
+//        } catch (SQLException ex) {
+//            System.out.println("Erreur lors du ModeleDAO getAll()");
+//            ex.printStackTrace();
+//        }
+//
+//        return null;
+//
+//    }
 
     @Override
     public Modele getById(Integer idModele) {

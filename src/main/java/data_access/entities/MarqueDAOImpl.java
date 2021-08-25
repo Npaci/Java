@@ -10,7 +10,7 @@ import java.util.List;
 
 public class MarqueDAOImpl implements MarqueDAO {
 
-    private Marque convertToObject(ResultSet res) throws SQLException {
+    public Marque convertToObject(ResultSet res) throws SQLException {
 
         int id = res.getInt("id_marque");
         String nom = res.getString("nom");

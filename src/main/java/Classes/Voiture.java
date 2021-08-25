@@ -1,5 +1,7 @@
 package Classes;
 
+import java.lang.invoke.CallSite;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -78,6 +80,24 @@ public class Voiture {
         this.kilometre = kilometre;
     }
 
+    public List<Voiture_Option> genererListVoitureOptions(List<Voiture_Option> listFromDB) {
+        List<Voiture_Option> listGen = new ArrayList<>();
+
+        int firstID;
+
+        if(listFromDB.size() == 0)
+            firstID = 1;
+        else
+            firstID = listFromDB.get(listFromDB.size()-1).getId_voiture_option();
+
+        for (Option opt : listOptions) {
+            listGen.add(new Voiture_Option(firstID, this,opt));
+            firstID++;
+        }
+
+        return listGen;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -91,7 +111,7 @@ public class Voiture {
         return "\nVoiture #"  + id_voiture +
                 "\nModèle: " + modele.getNom() + " ("+modele.getMarque().getNom()+")"+
                 "\nOption(s): " + listOptions +
-                "\nPrix: " + prix +
+                "\nPrix: " + prix + " eur" +
                 "\nCouleur: '" + couleur + '\'' +
                 "\narburant: '" + carburant + '\'' +
                 "\nKm: " + kilometre+"\n";

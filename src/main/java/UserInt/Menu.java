@@ -1,9 +1,7 @@
 package UserInt;
 
-import Classes.Marque;
-import Classes.Modele;
-import Classes.Option;
-import Classes.Voiture;
+import Classes.*;
+import data_access.entities.*;
 
 import java.util.ArrayList;
 import java.util.InputMismatchException;
@@ -13,31 +11,35 @@ import java.util.Scanner;
 public class Menu {
 
     private Scanner scan = new Scanner(System.in);
-    public List<Voiture> toutesVoitures = new ArrayList<>();
+    public List<Voiture> toutesVoitures = new VoitureDAOImpl().getAll();
+    public List<Modele> tousModeles = new ModeleDAOImpl().getAll();
+    public List<Marque> toutesMarques = new MarqueDAOImpl().getAll();
+    public List<Option> toutesOptions = new OptionDAOIpml().getAll();
 
     public static final String[] TYPES_CARBURANTS = new String[]{"Essence", "Diesel", "LPG"};
 
-    public Marque[] mesMarques = new Marque[]{new Marque(1, "Ford"),
-            new Marque(2, "BMW"),
-            new Marque(3,"Volkswagen"),
-            new Marque(4, "Audi"),
-            new Marque(5, "Mercedes")};
-
-    public Modele[] mesModeles = new Modele[]{new Modele(1, "Fiesta", mesMarques[0]),
-            new Modele(2, "Serie 1", mesMarques[1]),
-            new Modele(3, "Polo", mesMarques[2]),
-            new Modele(4, "A1", mesMarques[3]),
-            new Modele(5, "class A", mesMarques[4])};
-
-    public Option[] mesOptions = new Option[]{new Option(1, "ABS", 2000.),
-            new Option(2, "Bluetooth", 200.),
-            new Option(3, "Airco", 1000.),
-            new Option(4, "Sièges chaufants", 2000.),
-            new Option(5, "Camera de recul", 2500.),
-            new Option(6, "Capteurs de recul", 1000.),
-            new Option(7, "GPS", 2000.)
-            };
-
+    //region Avant DB
+//    public Marque[] mesMarques = new Marque[]{new Marque(1, "Ford"),
+//            new Marque(2, "BMW"),
+//            new Marque(3,"Volkswagen"),
+//            new Marque(4, "Audi"),
+//            new Marque(5, "Mercedes")};
+//
+//    public Modele[] mesModeles = new Modele[]{new Modele(1, "Fiesta", mesMarques[0]),
+//            new Modele(2, "Serie 1", mesMarques[1]),
+//            new Modele(3, "Polo", mesMarques[2]),
+//            new Modele(4, "A1", mesMarques[3]),
+//            new Modele(5, "class A", mesMarques[4])};
+//
+//    public Option[] mesOptions = new Option[]{new Option(1, "ABS", 2000.),
+//            new Option(2, "Bluetooth", 200.),
+//            new Option(3, "Airco", 1000.),
+//            new Option(4, "Sièges chaufants", 2000.),
+//            new Option(5, "Camera de recul", 2500.),
+//            new Option(6, "Capteurs de recul", 1000.),
+//            new Option(7, "GPS", 2000.)
+//            };
+    //endregion
 
     public int afficherMenu() {
 
@@ -94,12 +96,26 @@ public class Menu {
 
             switch (choix){
                 case 1:
-                    toutesVoitures.add(creerVoiture());
+                    Voiture nouvelleV = creerVoiture();
+
+                    if (nouvelleV != null) {
+                        if (new VoitureDAOImpl().insert(nouvelleV)) {
+                            toutesVoitures.add(nouvelleV);
+                            System.out.println(nouvelleV+"** a bien été ajouté à la BD ! **");
+                        }
+                        else
+                            System.out.println("\n** Erreur lors de l'ajout de la nouvelle voiture dans la BD ! **");
+                    }else
+                        System.out.println("\n** Erreur lors de la création de la nouvelle voiture ! **");
                     break;
                 case 2:
                     afficherToutesVoitures();
                     break;
                 case 3:
+                    if(toutesVoitures.size() > 0)
+                        modifierVoiture();
+                    else
+                        System.out.println("-- Aucune voiture dans le garage! --");
                     break;
                 case 4:
                     supprimerVoiture();
@@ -112,6 +128,166 @@ public class Menu {
             }
         }while (choix != 5);
     }
+
+    private void modifierVoiture() {
+        boolean continuer = true, correct = true;
+
+        System.out.println("Que voulez-vous modifier?");
+        while (continuer){
+
+            do {
+                System.out.println("\n1. Modifier les options");
+                System.out.println("2. Modifier la couleur");
+                System.out.println("3. Quitter");
+                System.out.print("=> ");
+
+                try{
+                    int choix = scan.nextInt();
+
+                    if (choix == 1 || choix == 2 || choix == 3)
+                        correct = true;
+                    else
+                        correct = false;
+
+                    switch (choix) {
+                        case 1:
+                            modifierOptions();
+                            break;
+                        case 2:
+                            modifierCouleur();
+                            break;
+                        case 3:
+                            continuer = false;
+                            break;
+
+                        default:
+                            System.out.println("Vous n'avez que 3 possibilités\n\n");
+
+                    }
+                }catch (InputMismatchException ex){
+                    scan.nextLine();
+                    System.err.println("Seul les chiffres et une virgule sont autorisés!");
+                }
+
+            }while (!correct);
+        }
+    }
+
+    private void modifierOptions() {
+        int idCible;
+        Voiture found;
+        System.out.println("Voici la liste de(s) voiture(s):");
+
+        do {
+            found = null;
+            afficherToutesVoitures();
+            System.out.println("Saisissez l'ID de la voiture à modifier");
+            System.out.print("=> ");
+
+            try{
+                idCible = scan.nextInt();
+                scan.nextLine();//for the next scan
+
+                for (int i = 0; i < toutesVoitures.size() && found == null; i++)
+                    if (toutesVoitures.get(i).getId_voiture() == idCible)
+                        found = toutesVoitures.get(i);
+
+                if(found != null){
+                    //if (!(found.getListOptions().size() == toutesOptions.size()))
+                    boolean correct;
+                    int choix=0;
+
+                    do {
+                        System.out.println("1. Ajouter des options");
+                        System.out.println("2. Retirer des options");
+                        System.out.print("=> ");
+
+                        try {
+
+                            choix = scan.nextInt();
+
+                            if (choix != 1 && choix != 2) {
+                                correct = false;
+                                System.out.println("Vous n'avez que 2 possibilités\n\n");
+                            } else
+                                correct = true;
+
+                        } catch (InputMismatchException ex) {
+                            scan.nextLine();
+                            correct = false;
+                            System.out.println("Seul les chiffres sont autorisés!\n\n");
+                        }
+                    }while (!correct);
+
+                    List<Option> resList = null;
+
+                    if (choix == 1)
+                        resList = newOptions(found.getListOptions());
+                    else if (choix == 2)
+                        resList = removeOptions(found.getListOptions());
+
+                    if (resList != found.getListOptions()){
+                        if (new VoitureDAOImpl().update(found)){
+                            toutesVoitures.set(idCible, found);
+                            System.out.println("-- Les options de la voiture #"+found.getId_voiture()+" ont été modifiés ! --");
+                        }else
+                            System.out.println("** Erreur lors de la modification des options de la voiture #"+found.getId_voiture()+" ! **");
+                    }
+
+                }else
+                    System.out.println("Aucune voiture ne possède l'ID ("+idCible+")!");
+            }catch (InputMismatchException ex){
+                scan.nextLine();
+                found = null;
+                System.err.println("Seul les chiffres et une virgule sont autorisés!");
+            }
+        }while (found == null);
+    }
+
+    private void modifierCouleur() {
+        int idCible;
+        Voiture found;
+        System.out.println("Voici la liste de(s) voiture(s):");
+
+        do {
+            found = null;
+            afficherToutesVoitures();
+            System.out.println("Saisissez l'ID de la voiture à modifier");
+            System.out.print("=> ");
+
+            try{
+                idCible = scan.nextInt();
+                scan.nextLine();//for the next scan
+
+                for (int i = 0; i < toutesVoitures.size() && found == null; i++)
+                    if (toutesVoitures.get(i).getId_voiture() == idCible)
+                        found = toutesVoitures.get(i);
+
+                if(found != null){
+                    System.out.println("Veuillez entrer la nouvelle couleur");
+                    System.out.print("=> ");
+                    String couleur = scan.nextLine();
+
+                    found.setCouleur(couleur);
+
+                    if(!new VoitureDAOImpl().update(found)){
+                        System.out.println("** Erreur lors de la modification de la couleur ! **");
+                        return;
+                    }else {
+                        toutesVoitures.set(idCible, found);
+                        System.out.println("-- La couleur de la voiture #"+found.getId_voiture()+" a bien été modifiée ! --");
+                    }
+                }else
+                    System.out.println("Aucune voiture ne possède l'ID ("+idCible+")!");
+            }catch (InputMismatchException ex){
+                scan.nextLine();
+                found = null;
+                System.err.println("Seul les chiffres et une virgule sont autorisés!");
+            }
+        }while (found == null);
+
+    }
+
 
     public void supprimerVoiture(){
 
@@ -136,9 +312,12 @@ public class Menu {
                             found = toutesVoitures.get(i);
 
                     if(found != null){
-                        System.out.println("\n****** Voiture supprimée ******");
-                        System.out.println(found);
-                        toutesVoitures.remove(found);
+                        if (new VoitureDAOImpl().delete(found.getId_voiture())){
+                            toutesVoitures.remove(found);
+                            System.out.println("\n-- Voiture supprimée --");
+                            System.out.println(found);
+                        }else
+                            System.out.println("\n** Erreur lors de la suppression, la voiture: "+found+" n'a pas été supprimé! **");
                     }else
                         System.out.println("Aucune voiture ne possède l'ID ("+idCible+")!");
 
@@ -180,7 +359,7 @@ public class Menu {
         saisie = scan.nextLine();
 
         if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O")){
-            listOptions = newOptions();
+            listOptions = newOptions(new ArrayList<>());
         }
 
         carburant = choixCarburant();
@@ -281,15 +460,15 @@ public class Menu {
         int choix=-1;
         List<Modele> modeleList = new ArrayList<>();
 
+        for (int i = 0; i < tousModeles.size(); i++)
+            if (tousModeles.get(i).getMarque().getId_marque() == marque.getId_marque())
+                modeleList.add(tousModeles.get(i));
+
         do {
-            modeleList.clear();
             System.out.println("Voici le(s) modèle(s) disponible(s) pour cette marque:");
-            for (int i = 0; i < mesModeles.length; i++) {
-                if (mesModeles[i].getMarque() == marque) {
-                    System.out.println((i + 1) + ". " + mesModeles[i].getNom());
-                    modeleList.add(mesModeles[i]);
-                }
-            }
+            for (int j = 0; j < modeleList.size(); j++)
+                System.out.println((j + 1) + ". " + modeleList.get(j).getNom());
+
             System.out.println("Quel modèle choisissez-vous?");
             System.out.print("=> ");
 
@@ -330,8 +509,8 @@ public class Menu {
 
         do {
 
-            for (Marque mesMarque : mesMarques) {
-                System.out.println(mesMarque.getId_marque()+". "+mesMarque.getNom());
+            for (Marque marque : toutesMarques) {
+                System.out.println(marque.getId_marque()+". "+marque.getNom());
             }
             System.out.println("Quelle marque choisissez-vous?");
             System.out.print("=> ");
@@ -340,9 +519,9 @@ public class Menu {
 
                 choix = scan.nextInt();
 
-                if (choix <= 0 || choix > mesMarques.length) {
+                if (choix <= 0 || choix > toutesMarques.size()) {
                     correct = false;
-                    System.out.println("Vous n'avez que "+mesMarques.length+" possibilités\n\n");
+                    System.out.println("Vous n'avez que "+toutesMarques.size()+" possibilités\n\n");
                 }else
                     correct = true;
 
@@ -354,16 +533,16 @@ public class Menu {
         }while (!correct);
 
         scan.nextLine();//for the next scan
-        for (Marque mesMarque : mesMarques) {
-            if (mesMarque.getId_marque() == choix)
-                return mesMarque;
+        for (Marque marque : toutesMarques) {
+            if (marque.getId_marque() == choix)
+                return marque;
         }
 
         return null;
     }
 
-    private List<Option> newOptions() {
-        List<Option> newList = new ArrayList();
+    private List<Option> newOptions(List<Option> newList) {
+        List<Option> noChosenOptions = new ArrayList<>(toutesOptions);
 
         boolean correct = false, onemore=true;
         int choix=-1;
@@ -372,16 +551,16 @@ public class Menu {
 
             do {
 
-                if (newList.size() == mesOptions.length){
-                    System.out.println("Vous avez ajouté toutes les options disponible!");
+                if (noChosenOptions.size() == 0){
+                    System.out.println("-- Vous avez toutes les options disponibles ! --");
                     correct = true;
                     onemore = false;
                 }else {
                     System.out.println("Voici les options disponible: ");
-                    for (Option mesOption : mesOptions) {
-                        if (!newList.contains(mesOption))
-                            System.out.println(mesOption.getId_option() + ". " + mesOption.getNom() + " (" + mesOption.getPrix() + " eur)");
-                    }
+                    for (int i = 0; i < noChosenOptions.size(); i++)
+                        System.out.println((i+1) + ". " + noChosenOptions.get(i).getNom() +
+                                " (" + noChosenOptions.get(i).getPrix() + " eur)");
+
                     System.out.println("Quelle option voulez-vous?");
                     System.out.print("=> ");
 
@@ -389,9 +568,9 @@ public class Menu {
 
                         choix = scan.nextInt();
 
-                        if (choix <= 0 || choix > mesOptions.length) {
+                        if (choix <= 0 || choix > noChosenOptions.size()) {
                             correct = false;
-                            System.err.println("Vous n'avez que " + mesMarques.length + " possibilités");
+                            System.err.println("Vous n'avez que " + noChosenOptions.size() + " possibilités");
                         } else
                             correct = true;
 
@@ -405,19 +584,90 @@ public class Menu {
             } while (!correct);
 
             scan.nextLine();//for the next scan
-            newList.add(mesOptions[choix-1]);
+            newList.add(noChosenOptions.get(choix-1));
+            noChosenOptions.remove(choix-1);
 
-            System.out.println("Voulez-vous ajouter une autre option (y/n)?");
-            String saisie = scan.nextLine();
-
-            if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
-                onemore = true;
-            else
+            if (noChosenOptions.size() == 0){
+                System.out.println("Vous avez ajouté toutes les options disponible!");
                 onemore = false;
+            }
+            else {
+                System.out.println("Voulez-vous ajouter une autre option (y/n)?");
+                String saisie = scan.nextLine();
+
+                if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
+                    onemore = true;
+                else
+                    onemore = false;
+            }
 
         }
 
-        return newList;
+        return new ArrayList<>(newList);
+
+    }
+
+    private List<Option> removeOptions(List<Option> newList) {
+
+        boolean correct = false, onemore=true;
+        int choix=-1;
+
+        while (onemore) {
+
+            do {
+
+                if (newList.size() == 0){
+                    System.out.println("-- Vous avez retirer toutes les options de la voiture ! --");
+                    correct = true;
+                    onemore = false;
+                }else {
+                    System.out.println("Voici les options que possède cette voiture: ");
+                    for (int i = 0; i < newList.size(); i++)
+                        System.out.println((i+1) + ". " + newList.get(i).getNom() +
+                                " (" + newList.get(i).getPrix() + " eur)");
+
+                    System.out.println("Quelle option voulez-vous retirer?");
+                    System.out.print("=> ");
+
+                    try {
+
+                        choix = scan.nextInt();
+
+                        if (choix <= 0 || choix > newList.size()) {
+                            correct = false;
+                            System.err.println("Vous n'avez que " + newList.size() + " possibilités");
+                        } else
+                            correct = true;
+
+                    } catch (InputMismatchException ex) {
+                        scan.nextLine();
+                        correct = false;
+                        System.err.println("Seul les chiffres sont autorisés!");
+                    }
+                }
+
+            } while (!correct);
+
+            scan.nextLine();//for the next scan
+            newList.remove(choix-1);
+
+            if (newList.size() == 0){
+                System.out.println("-- Vous avez retirer toutes les options de la voiture ! --");
+                onemore = false;
+            }
+            else {
+                System.out.println("Voulez-vous retirer une autre option (y/n)?");
+                String saisie = scan.nextLine();
+
+                if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
+                    onemore = true;
+                else
+                    onemore = false;
+            }
+
+        }
+
+        return new ArrayList<>(newList);
 
     }
 }
