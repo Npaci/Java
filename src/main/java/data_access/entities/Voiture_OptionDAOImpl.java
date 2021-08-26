@@ -15,6 +15,39 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Voiture_OptionDAOImpl implements Voiture_OptionDAO {
+    //Si add est vrai on va retourner les tuples Voiture_Option à ajouter dans la BD
+    //Si add est faux on retournera les tuples Voiture_Option correspondant à supprimer
+    public List<Voiture_Option> genererVoitureOptions(Voiture v, List<Option> optList, boolean add) {
+        List<Voiture_Option> listGen = new ArrayList<>();
+
+        if (v != null && optList != null) {
+            List<Voiture_Option> listFromDB = new Voiture_OptionDAOImpl().getAll();
+
+            if (add) {
+                int firstID;
+
+                if (listFromDB.size() == 0)
+                    firstID = 1;
+                else
+                    firstID = listFromDB.get(listFromDB.size() - 1).getId_voiture_option() + 1;
+
+                for (Option opt : optList) {
+                    listGen.add(new Voiture_Option(firstID, v, opt));
+                    firstID++;
+                }
+            } else {
+                for (Option opt : optList) {
+                    for (Voiture_Option vo : listFromDB) {
+                        if (v.getId_voiture() == vo.getVoiture().getId_voiture() &&
+                                opt.getId_option() == vo.getOption().getId_option())
+                            listGen.add(new Voiture_Option(vo.getId_voiture_option(), v, opt));
+                    }
+                }
+            }
+        }
+
+        return listGen;
+    }
 
     public Voiture_Option convertToObject(ResultSet res) throws SQLException {
 

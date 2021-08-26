@@ -88,7 +88,7 @@ public class Voiture {
         if(listFromDB.size() == 0)
             firstID = 1;
         else
-            firstID = listFromDB.get(listFromDB.size()-1).getId_voiture_option();
+            firstID = listFromDB.get(listFromDB.size()-1).getId_voiture_option()+1;
 
         for (Option opt : listOptions) {
             listGen.add(new Voiture_Option(firstID, this,opt));
@@ -108,9 +108,23 @@ public class Voiture {
 
     @Override
     public String toString() {
+        String optionString;
+
+        if (listOptions.size() == 0)
+            optionString = "-";
+        else
+            optionString = "\n";
+
+        for (int i = 0; i < listOptions.size(); i++) {
+            if (i == listOptions.size() -1)
+                optionString = optionString.concat(listOptions.get(i).toString());
+            else
+                optionString = optionString.concat(listOptions.get(i).toString() + "\n");
+        }
+
         return "\nVoiture #"  + id_voiture +
                 "\nModèle: " + modele.getNom() + " ("+modele.getMarque().getNom()+")"+
-                "\nOption(s): " + listOptions +
+                "\nOption(s): " + optionString +
                 "\nPrix: " + prix + " eur" +
                 "\nCouleur: '" + couleur + '\'' +
                 "\narburant: '" + carburant + '\'' +

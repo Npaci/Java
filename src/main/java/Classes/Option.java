@@ -45,8 +45,10 @@ public class Option {
 
     @Override
     public String toString() {
-        return "Opt [Id: " + id_option +
-                ", nom: '" + nom + '\'' +
-                ", prix: " + prix +" eur]";
+//        return "Opt [Id: " + id_option +
+//                ", nom: '" + nom + '\'' +
+//                ", prix: " + prix +" eur]";
+        //Pour la présentation
+        return "Opt["+ nom + " - " + prix +" eur]";
     }
 }

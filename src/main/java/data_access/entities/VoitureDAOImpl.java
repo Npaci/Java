@@ -30,16 +30,6 @@ public class VoitureDAOImpl implements VoitureDAO {
         return optionList;
     }
 
-    private List<Voiture_Option> getAllVoitureOptions(ResultSet res) throws SQLException {
-        List<Voiture_Option> listVoitOpt = new ArrayList<>();
-
-        while (res.next()){
-            listVoitOpt.add(new Voiture_OptionDAOImpl().convertToObject(res));
-        }
-
-        return listVoitOpt;
-    }
-
     public Voiture convertToObject(ResultSet res) throws SQLException {
 
         int id = res.getInt("id_voiture");
@@ -147,8 +137,7 @@ public class VoitureDAOImpl implements VoitureDAO {
     public boolean insert(Voiture v) {
         try (// Conn, Stmnt et Resultset sont des ATUCLOSABLE, en mettant entre parenthese(try with ressources), les ressources seront automatiquement fermées
              Connection connection = MySqlConnectionFactory.getConnection();
-             PreparedStatement prepareStatement = connection.prepareStatement("INSERT INTO Voiture Values(?,?,?,?,?,?)");
-             PreparedStatement voprepStat = connection.prepareStatement("SELECT * FROM Voiture_Option");
+             PreparedStatement prepareStatement = connection.prepareStatement("INSERT INTO Voiture Values(?,?,?,?,?,?)")
         ){
 
             prepareStatement.setInt(1, v.getId_voiture());
@@ -159,18 +148,12 @@ public class VoitureDAOImpl implements VoitureDAO {
             prepareStatement.setDouble(6, v.getKilometre());
 
             int ret = prepareStatement.executeUpdate();
-            ResultSet res = voprepStat.executeQuery();
 
             if (ret > 0){
-                List<Voiture_Option> listVO = getAllVoitureOptions(res);
+                List<Voiture_Option> listVO = v.genererListVoitureOptions(new Voiture_OptionDAOImpl().getAll());
                 Voiture_OptionDAOImpl voDAO = new Voiture_OptionDAOImpl();
                 for (Voiture_Option vo : listVO)
                     voDAO.insert(vo);
-//                while (res.next()){
-//                    Voiture_OptionDAOImpl voDAO = new Voiture_OptionDAOImpl();
-//                    Voiture_Option vo = voDAO.convertToObject(res);
-//                    voDAO.insert(vo);
-//                }
             }
 
             return ret > 0;

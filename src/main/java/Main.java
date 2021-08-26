@@ -162,8 +162,8 @@ public class Main {
         //endregion
 
         //region VOITURE_OPTION
-        Voiture_OptionDAO voiture_optionDAO = new Voiture_OptionDAOImpl();
-        List<Voiture_Option> allVoitureOptions = voiture_optionDAO.getAll();
+//        Voiture_OptionDAO voiture_optionDAO = new Voiture_OptionDAOImpl();
+//        List<Voiture_Option> allVoitureOptions = voiture_optionDAO.getAll();
 //
 //        System.out.println("Voiture(s) lue(s) dans la DB:");
 //        allVoitureOptions.forEach(System.out::println);

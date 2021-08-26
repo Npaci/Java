@@ -78,6 +78,16 @@ public class Menu {
 
     }
 
+    private int getIndexVoiture(List<Voiture> listV, int idVoiture){
+        if (listV != null){
+            for (int i = 0; i < listV.size(); i++) {
+                if (listV.get(i).getId_voiture() == idVoiture)
+                    return i;
+            }
+        }
+        return -1;
+    }
+
     public void afficherToutesVoitures() {
         if(toutesVoitures.size() == 0)
             System.out.println("*Aucune voiture dans le garage!*");
@@ -220,19 +230,34 @@ public class Menu {
                     }while (!correct);
 
                     List<Option> resList = null;
+                    List<Voiture_Option> toDB = null;
+                    Voiture_OptionDAOImpl voDAO = new Voiture_OptionDAOImpl();
+                    boolean okDB = true;
 
-                    if (choix == 1)
+                    if (choix == 1) {
                         resList = newOptions(found.getListOptions());
-                    else if (choix == 2)
-                        resList = removeOptions(found.getListOptions());
+                        toDB = voDAO.genererVoitureOptions(found, resList, true);
 
-                    if (resList != found.getListOptions()){
-                        if (new VoitureDAOImpl().update(found)){
-                            toutesVoitures.set(idCible, found);
-                            System.out.println("-- Les options de la voiture #"+found.getId_voiture()+" ont été modifiés ! --");
-                        }else
-                            System.out.println("** Erreur lors de la modification des options de la voiture #"+found.getId_voiture()+" ! **");
+                        for (int i = 0; i < toDB.size() && okDB; i++) {
+                            okDB = voDAO.insert(toDB.get(i));
+                        }
+
                     }
+                    else if (choix == 2) {
+                        resList = removeOptions(found.getListOptions());
+                        toDB = voDAO.genererVoitureOptions(found, resList, false);
+
+                        for (int i = 0; i < toDB.size() && okDB; i++)
+                            okDB = voDAO.delete(toDB.get(i).getId_voiture_option());
+                    }
+
+                    if (okDB){
+                        if (resList.size() > 0) {
+                            toutesVoitures.set(getIndexVoiture(toutesVoitures, idCible), found);
+                            System.out.println("-- Les options de la voiture #" + found.getId_voiture() + " ont été modifiés ! --");
+                        }
+                    }else
+                        System.out.println("** Erreur lors de la modification des options de la voiture #"+found.getId_voiture()+" ! **");
 
                 }else
                     System.out.println("Aucune voiture ne possède l'ID ("+idCible+")!");
@@ -274,7 +299,7 @@ public class Menu {
                         System.out.println("** Erreur lors de la modification de la couleur ! **");
                         return;
                     }else {
-                        toutesVoitures.set(idCible, found);
+                        toutesVoitures.set(getIndexVoiture(toutesVoitures,idCible), found);
                         System.out.println("-- La couleur de la voiture #"+found.getId_voiture()+" a bien été modifiée ! --");
                     }
                 }else
@@ -312,7 +337,14 @@ public class Menu {
                             found = toutesVoitures.get(i);
 
                     if(found != null){
-                        if (new VoitureDAOImpl().delete(found.getId_voiture())){
+                        boolean okDB = true;
+                        Voiture_OptionDAOImpl voDAO = new Voiture_OptionDAOImpl();
+                        List<Voiture_Option> toRemove = voDAO.genererVoitureOptions(found, found.getListOptions(), false);
+
+                        for (int i = 0; i < toRemove.size() && okDB; i++)
+                            okDB = voDAO.delete(toRemove.get(i).getId_voiture_option());
+
+                        if (new VoitureDAOImpl().delete(found.getId_voiture()) && okDB){
                             toutesVoitures.remove(found);
                             System.out.println("\n-- Voiture supprimée --");
                             System.out.println(found);
@@ -343,7 +375,7 @@ public class Menu {
 
     private Voiture creerVoiture (){
 
-        List<Option> listOptions = null;
+        List<Option> listOptions = new ArrayList<>();
         Marque newMarque = null;
         Modele newModele = null;
         double prix=0, km=0;
@@ -359,7 +391,7 @@ public class Menu {
         saisie = scan.nextLine();
 
         if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O")){
-            listOptions = newOptions(new ArrayList<>());
+            newOptions(listOptions);
         }
 
         carburant = choixCarburant();
@@ -541,24 +573,37 @@ public class Menu {
         return null;
     }
 
-    private List<Option> newOptions(List<Option> newList) {
-        List<Option> noChosenOptions = new ArrayList<>(toutesOptions);
+    //Retourne les options ajoutées
+    private List<Option> newOptions(List<Option> currentList) {
+        List<Option> noChosenOptions = new ArrayList<>();
 
-        boolean correct = false, onemore=true;
+        for (Option option : toutesOptions) {
+            boolean found = false;
+            for (int i = 0; i < currentList.size() && !found; i++)
+                if (option.getNom().equals(currentList.get(i).getNom()))
+                    found = true;
+
+            if (!found)
+                noChosenOptions.add(option);
+        }
+
+        List<Option> toAdd = new ArrayList<>();
+
+        boolean correct, onemore=true;
         int choix=-1;
 
         while (onemore) {
 
             do {
 
-                if (noChosenOptions.size() == 0){
+                if (noChosenOptions.size() == 0) {
                     System.out.println("-- Vous avez toutes les options disponibles ! --");
                     correct = true;
                     onemore = false;
-                }else {
+                } else {
                     System.out.println("Voici les options disponible: ");
                     for (int i = 0; i < noChosenOptions.size(); i++)
-                        System.out.println((i+1) + ". " + noChosenOptions.get(i).getNom() +
+                        System.out.println((i + 1) + ". " + noChosenOptions.get(i).getNom() +
                                 " (" + noChosenOptions.get(i).getPrix() + " eur)");
 
                     System.out.println("Quelle option voulez-vous?");
@@ -583,31 +628,35 @@ public class Menu {
 
             } while (!correct);
 
-            scan.nextLine();//for the next scan
-            newList.add(noChosenOptions.get(choix-1));
-            noChosenOptions.remove(choix-1);
+            if (onemore){
+                scan.nextLine();//for the next scan
+                currentList.add(noChosenOptions.get(choix - 1));
+                toAdd.add(noChosenOptions.get(choix - 1));
+                noChosenOptions.remove(choix - 1);
 
-            if (noChosenOptions.size() == 0){
-                System.out.println("Vous avez ajouté toutes les options disponible!");
-                onemore = false;
-            }
-            else {
-                System.out.println("Voulez-vous ajouter une autre option (y/n)?");
-                String saisie = scan.nextLine();
-
-                if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
-                    onemore = true;
-                else
+                if (noChosenOptions.size() == 0) {
+                    System.out.println("Vous avez ajouté toutes les options disponible!");
                     onemore = false;
+                } else {
+                    System.out.println("Voulez-vous ajouter une autre option (y/n)?");
+                    String saisie = scan.nextLine();
+
+                    if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
+                        onemore = true;
+                    else
+                        onemore = false;
+                }
             }
 
         }
 
-        return new ArrayList<>(newList);
+        return toAdd;
 
     }
 
+    //Retourne les options supprimées
     private List<Option> removeOptions(List<Option> newList) {
+        List<Option> toRemove = new ArrayList<>();
 
         boolean correct = false, onemore=true;
         int choix=-1;
@@ -617,7 +666,7 @@ public class Menu {
             do {
 
                 if (newList.size() == 0){
-                    System.out.println("-- Vous avez retirer toutes les options de la voiture ! --");
+                    System.out.println("-- Il n'y a aucune option à retirer de cette voiture ! --");
                     correct = true;
                     onemore = false;
                 }else {
@@ -648,26 +697,27 @@ public class Menu {
 
             } while (!correct);
 
-            scan.nextLine();//for the next scan
-            newList.remove(choix-1);
+            if (onemore) {
+                scan.nextLine();//for the next scan
+                toRemove.add(newList.remove(choix - 1));
 
-            if (newList.size() == 0){
-                System.out.println("-- Vous avez retirer toutes les options de la voiture ! --");
-                onemore = false;
-            }
-            else {
-                System.out.println("Voulez-vous retirer une autre option (y/n)?");
-                String saisie = scan.nextLine();
-
-                if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
-                    onemore = true;
-                else
+                if (newList.size() == 0) {
+                    System.out.println("-- Vous avez retirer toutes les options de la voiture ! --");
                     onemore = false;
+                } else {
+                    System.out.println("Voulez-vous retirer une autre option (y/n)?");
+                    String saisie = scan.nextLine();
+
+                    if (saisie.equals("y") || saisie.equals("Y") || saisie.equals("o") || saisie.equals("O"))
+                        onemore = true;
+                    else
+                        onemore = false;
+                }
             }
 
         }
 
-        return new ArrayList<>(newList);
+        return toRemove;
 
     }
 }
