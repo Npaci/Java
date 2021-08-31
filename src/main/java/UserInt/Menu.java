@@ -46,7 +46,7 @@ public class Menu {
         boolean correct = false;
         int choix=0;
 
-        System.out.println("\n\nQue voulez-vous faire ?");
+        System.out.println("\nQue voulez-vous faire ?");
         do{
 
             System.out.println("1. Ajouter une nouvelle voiture");

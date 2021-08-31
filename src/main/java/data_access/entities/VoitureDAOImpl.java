@@ -31,17 +31,18 @@ public class VoitureDAOImpl implements VoitureDAO {
     }
 
     public Voiture convertToObject(ResultSet res) throws SQLException {
+        if (res != null) {
+            int id = res.getInt("id_voiture");
+            Modele modele = new ModeleDAOImpl().getById(res.getInt("modele_id"));
+            double prix = res.getDouble("prix");
+            String couleur = res.getString("couleur");
+            String carburant = res.getString("carburant");
+            double kilometre = res.getDouble("kilometre");
 
-        int id = res.getInt("id_voiture");
-        Modele modele = new ModeleDAOImpl().getById(res.getInt("modele_id"));
-        double prix = res.getDouble("prix");
-        String couleur = res.getString("couleur");
-        String carburant = res.getString("carburant");
-        double kilometre = res.getDouble("kilometre");
-
-        Voiture voiture = new Voiture(id, modele, getAllOptions(id), prix, couleur, carburant, kilometre);
-        return voiture;
-
+            Voiture voiture = new Voiture(id, modele, getAllOptions(id), prix, couleur, carburant, kilometre);
+            return voiture;
+        }
+        return null;
     }
 
     public Voiture convertToObjectWithoutOptions(ResultSet res) throws SQLException {
@@ -83,12 +84,13 @@ public class VoitureDAOImpl implements VoitureDAO {
 
     @Override
     public Voiture getById(Integer idVoiture) {
-        try (// Conn, Stmnt et Resultset sont des ATUCLOSABLE, en mettant entre parenthese(try with ressources), les ressources seront automatiquement fermées
+        try (// Conn, PreparedStmnt sont des ATUCLOSABLE, en mettant entre parenthese(try with ressources), les ressources seront automatiquement fermées
              Connection connection = MySqlConnectionFactory.getConnection();
              PreparedStatement prepareStatement = connection.prepareStatement("SELECT * FROM Voiture WHERE id_voiture = ?");
-
-             //Statement myStatement = connection.createStatement();
-             //ResultSet rs = myStatement.executeQuery("SELECT * FROM Option WHERE id_option = "+id_option);
+//             PreparedStatement prepareStatement = connection.prepareStatement("select * "+
+//                             "from voiture v join modele m on v.modele_id = m.id_modele " +
+//                             "join marque m2 on m.marque_id = m2.ID_MARQUE "+
+//                             "join voiture_option vo2 on v.id_voiture = vo2.voiture_id and v.id_voiture = ?");
         ){
             prepareStatement.setInt(1, idVoiture);
 
@@ -101,7 +103,7 @@ public class VoitureDAOImpl implements VoitureDAO {
 
         } catch (SQLException ex) {
             System.out.println("Erreur lors du VoitureDAO getById()");
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
         }
 
         return null;

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("======== Bienvenu chez MotorTech ========");
+        System.out.println("======== Bienvenue chez BelgoMotor ========");
 
         Menu menu = new Menu();
 
